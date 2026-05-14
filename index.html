@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Learn Japanese through real conversations with spaced repetition and offline access.">
+    <meta name="theme-color" content="#0F6E56">
+    <title>日本語 Conversation Learner</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230F6E56' width='180' height='180'/><text x='50%' y='50%' font-size='100' font-family='Arial' fill='white' text-anchor='middle' dominant-baseline='central'>日</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230F6E56' width='180' height='180'/><text x='50%' y='50%' font-size='100' font-family='Arial' fill='white' text-anchor='middle' dominant-baseline='central'>日</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0F6E56;
+            --primary-light: #1D9E75;
+            --primary-dark: #085041;
+            --accent: #D85A30;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666;
+            --border: #e0e0e0;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #f44336;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #5DCAA5;
+                --primary-light: #7FD4B3;
+                --primary-dark: #0F6E56;
+                --accent: #F0997B;
+                --bg-primary: #1a1a1a;
+                --bg-secondary: #2d2d2d;
+                --text-primary: #f5f5f5;
+                --text-secondary: #999;
+                --border: #404040;
+            }
+        }
+
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 1.2rem 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 110, 86, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .form-buttons button {
+            flex: 1;
+        }
+
+        .conversation-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .conversation-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(15, 110, 86, 0.1);
+        }
+
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .conversation-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-category {
+            background: var(--bg-primary);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .badge-easy { background: var(--success); color: white; }
+        .badge-medium { background: var(--warning); color: white; }
+        .badge-hard { background: var(--danger); color: white; }
+
+        .badge-status {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .exchange {
+            background: var(--bg-primary);
+            padding: 1rem;
+            margin: 0.75rem 0;
+            border-left: 3px solid var(--primary);
+            border-radius: 4px;
+        }
+
+        .exchange-speaker {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 0.3rem;
+        }
+
+        .exchange-jp {
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .exchange-en {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .conversation-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .conversation-actions button {
+            flex: 1;
+            min-width: 100px;
+            padding: 0.6rem;
+            font-size: 0.85rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .search-box {
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            font-size: 1.3rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--primary);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 200;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .install-prompt {
+            background: var(--accent);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+
+        .install-prompt button {
+            background: white;
+            color: var(--accent);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.3rem;
+            }
+
+            .tabs {
+                padding: 0;
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                font-size: 0.85rem;
+                padding: 0.6rem 0.5rem;
+            }
+
+            .form-card {
+                padding: 1rem;
+            }
+
+            .modal-content {
+                border-radius: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>日本語 Conversation Learner</h1>
+            <p>Real conversations • Spaced repetition • Offline access</p>
+        </header>
+
+        <div id="installPrompt" class="install-prompt" style="display: none;">
+            <span>Add to home screen for offline access</span>
+            <button id="installBtn">Install</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('add')">Add</button>
+            <button class="tab-btn" onclick="switchTab('review')">Review</button>
+            <button class="tab-btn" onclick="switchTab('practice')">Practice</button>
+            <button class="tab-btn" onclick="switchTab('stats')">Progress</button>
+            <button class="tab-btn" onclick="switchTab('backup')">Backup</button>
+        </div>
+
+        <div class="main-content">
+            <!-- ADD TAB -->
+            <div id="add" class="tab-content active">
+                <div class="form-card">
+                    <h2 style="margin-bottom: 1rem;">Add Conversation</h2>
+                    
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="category" placeholder="e.g., Daily Life, Food, Hobbies" value="Daily Life">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Difficulty</label>
+                        <select id="difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1rem;">Your Message</h3>
+
+                    <div class="form-group">
+                        <label>Japanese (あなたの日本語)</label>
+                        <textarea id="japaneseYou" placeholder="e.g., 昨日は映画を見ました。"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>English (Context)</label>
+                        <textarea id="englishYou" placeholder="e.g., Yesterday I watched a movie."></textarea>
+                    </div>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; font-size: 1rem;">Friend's Response</h3>
+
+                    <div class="form-group">
+                        <label>Japanese (友達の返答)</label>
+                        <textarea id="japaneseFriend" placeholder="e.g., そうですね。どんな映画ですか？"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>English (Context)</label>
+                        <textarea id="englishFriend" placeholder="e.g., Is that so? What kind of movie?"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes (optional)</label>
+                        <textarea id="notes" placeholder="e.g., Grammar pattern, pronunciation tips, context notes"></textarea>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button class="btn btn-primary" onclick="addConversation()">Save Conversation</button>
+                        <button class="btn btn-secondary" onclick="resetForm()">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REVIEW TAB -->
+            <div id="review" class="tab-content">
+                <div class="search-box">
+                    <input type="text" id="searchBox" placeholder="Search conversations..." onkeyup="filterConversations()">
+                </div>
+                <div id="conversationsList"></div>
+            </div>
+
+            <!-- PRACTICE TAB -->
+            <div id="practice" class="tab-content">
+                <div id="practiceMode"></div>
+            </div>
+
+            <!-- STATS TAB -->
+            <div id="stats" class="tab-content">
+                <div class="stats-grid" id="statsGrid"></div>
+                <div id="categoryStats"></div>
+            </div>
+
+            <!-- BACKUP TAB -->
+            <div id="backup" class="tab-content">
+                <div class="form-card">
+                    <h2 style="margin-bottom: 1rem;">Backup & Restore</h2>
+                    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Download your conversations as JSON and restore them anytime.</p>
+                    <button class="btn btn-primary" onclick="exportData()" style="width: 100%; margin-bottom: 1rem;">Download Backup (JSON)</button>
+                    
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Restore from Backup</label>
+                    <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Conversation</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <form id="editForm" onsubmit="saveEdit(event)">
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" id="editCategory" required>
+                </div>
+                <div class="form-group">
+                    <label>Difficulty</label>
+                    <select id="editDifficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Your Japanese</label>
+                    <textarea id="editJapaneseYou" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Your English</label>
+                    <textarea id="editEnglishYou" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Friend's Japanese</label>
+                    <textarea id="editJapaneseFriend" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Friend's English</label>
+                    <textarea id="editEnglishFriend" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="editNotes"></textarea>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let db;
+        let conversations = [];
+        let currentEditId = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            setupInstallPrompt();
+            loadConversations();
+            updateStats();
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+            }
+        });
+
+        // IndexedDB Setup
+        function initDB() {
+            return new Promise((resolve) => {
+                const request = indexedDB.open('JapaneseConversationDB', 1);
+                request.onerror = () => console.error('DB error');
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve();
+                };
+                request.onupgradeneeded = (e) => {
+                    const store = e.target.result.createObjectStore('conversations', { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('date', 'date');
+                    store.createIndex('status', 'status');
+                };
+            });
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'review') loadConversations();
+            if (tabName === 'stats') updateStats();
+            if (tabName === 'practice') setupPracticeMode();
+        }
+
+        // Add Conversation
+        function addConversation() {
+            const japaneseYou = document.getElementById('japaneseYou').value.trim();
+            const japaneseFriend = document.getElementById('japaneseFriend').value.trim();
+
+            if (!japaneseYou || !japaneseFriend) {
+                showToast('Please fill in Japanese for both exchanges');
+                return;
+            }
+
+            const conversation = {
+                category: document.getElementById('category').value || 'General',
+                difficulty: document.getElementById('difficulty').value,
+                exchanges: [
+                    {
+                        speaker: 'you',
+                        japanese: japaneseYou,
+                        english: document.getElementById('englishYou').value.trim()
+                    },
+                    {
+                        speaker: 'friend',
+                        japanese: japaneseFriend,
+                        english: document.getElementById('englishFriend').value.trim()
+                    }
+                ],
+                notes: document.getElementById('notes').value.trim(),
+                date: new Date().toISOString().split('T')[0],
+                status: 'new',
+                reviews: 0,
+                lastReviewed: null
+            };
+
+            const transaction = db.transaction(['conversations'], 'readwrite');
+            const store = transaction.objectStore('conversations');
+            store.add(conversation);
+
+            transaction.oncomplete = () => {
+                showToast('Conversation saved!');
+                resetForm();
+                loadConversations();
+                updateStats();
+            };
+        }
+
+        // Load Conversations
+        function loadConversations() {
+            const transaction = db.transaction(['conversations'], 'readonly');
+            const store = transaction.objectStore('conversations');
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                conversations = request.result.reverse();
+                renderConversations(conversations);
+            };
+        }
+
+        // Render Conversations
+        function renderConversations(items) {
+            const container = document.getElementById('conversationsList');
+            if (items.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📚</div><p>No conversations yet. Add one to get started!</p></div>';
+                return;
+            }
+
+            container.innerHTML = items.map(conv => `
+                <div class="conversation-item">
+                    <div class="conversation-header">
+                        <div class="conversation-meta">
+                            <span class="badge badge-category">${conv.category}</span>
+                            <span class="badge badge-${conv.difficulty}">${conv.difficulty}</span>
+                            <span class="badge badge-status">${conv.status}</span>
+                            <span class="badge badge-status">${conv.date}</span>
+                        </div>
+                    </div>
+                    ${conv.exchanges.map(ex => `
+                        <div class="exchange">
+                            <div class="exchange-speaker">${ex.speaker === 'you' ? 'You' : 'Friend'}</div>
+                            <div class="exchange-jp">${ex.japanese}</div>
+                            ${ex.english ? `<div class="exchange-en">${ex.english}</div>` : ''}
+                        </div>
+                    `).join('')}
+                    ${conv.notes ? `<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--text-secondary);"><strong>Notes:</strong> ${conv.notes}</div>` : ''}
+                    <div class="conversation-actions">
+                        <button class="btn btn-secondary" onclick="openEditModal(${conv.id})">Edit</button>
+                        <button class="btn btn-secondary" onclick="markAs(${conv.id}, 'reviewing')">Reviewing</button>
+                        <button class="btn btn-secondary" onclick="markAs(${conv.id}, 'mastered')">Mastered</button>
+                        <button class="btn btn-danger" onclick="deleteConversation(${conv.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter Conversations
+        function filterConversations() {
+            const search = document.getElementById('searchBox').value.toLowerCase();
+            const filtered = conversations.filter(c => 
+                c.category.toLowerCase().includes(search) ||
+                c.exchanges.some(ex => ex.japanese.includes(search))
+            );
+            renderConversations(filtered);
+        }
+
+        // Edit Modal
+        function openEditModal(id) {
+            const conv = conversations.find(c => c.id === id);
+            if (!conv) return;
+
+            currentEditId = id;
+            document.getElementById('editCategory').value = conv.category;
+            document.getElementById('editDifficulty').value = conv.difficulty;
+            document.getElementById('editJapaneseYou').value = conv.exchanges[0].japanese;
+            document.getElementById('editEnglishYou').value = conv.exchanges[0].english;
+            document.getElementById('editJapaneseFriend').value = conv.exchanges[1].japanese;
+            document.getElementById('editEnglishFriend').value = conv.exchanges[1].english;
+            document.getElementById('editNotes').value = conv.notes;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function saveEdit(event) {
+            event.preventDefault();
+            const transaction = db.transaction(['conversations'], 'readwrite');
+            const store = transaction.objectStore('conversations');
+            const conv = conversations.find(c => c.id === currentEditId);
+
+            conv.category = document.getElementById('editCategory').value;
+            conv.difficulty = document.getElementById('editDifficulty').value;
+            conv.exchanges[0].japanese = document.getElementById('editJapaneseYou').value;
+            conv.exchanges[0].english = document.getElementById('editEnglishYou').value;
+            conv.exchanges[1].japanese = document.getElementById('editJapaneseFriend').value;
+            conv.exchanges[1].english = document.getElementById('editEnglishFriend').value;
+            conv.notes = document.getElementById('editNotes').value;
+
+            store.put(conv);
+            transaction.oncomplete = () => {
+                closeModal();
+                loadConversations();
+                showToast('Changes saved!');
+            };
+        }
+
+        // Mark Status
+        function markAs(id, status) {
+            const transaction = db.transaction(['conversations'], 'readwrite');
+            const store = transaction.objectStore('conversations');
+            const conv = conversations.find(c => c.id === id);
+            conv.status = status;
+            conv.reviews = (conv.reviews || 0) + 1;
+            conv.lastReviewed = new Date().toISOString().split('T')[0];
+            store.put(conv);
+            transaction.oncomplete = () => {
+                loadConversations();
+                updateStats();
+                showToast(`Marked as ${status}!`);
+            };
+        }
+
+        // Delete Conversation
+        function deleteConversation(id) {
+            if (!confirm('Delete this conversation?')) return;
+            const transaction = db.transaction(['conversations'], 'readwrite');
+            const store = transaction.objectStore('conversations');
+            store.delete(id);
+            transaction.oncomplete = () => {
+                loadConversations();
+                updateStats();
+                showToast('Conversation deleted');
+            };
+        }
+
+        // Stats
+        function updateStats() {
+            const transaction = db.transaction(['conversations'], 'readonly');
+            const store = transaction.objectStore('conversations');
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const convs = request.result;
+                const total = convs.length;
+                const mastered = convs.filter(c => c.status === 'mastered').length;
+                const reviewing = convs.filter(c => c.status === 'reviewing').length;
+
+                const categories = {};
+                convs.forEach(c => {
+                    categories[c.category] = (categories[c.category] || 0) + 1;
+                });
+
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-label">Total</div>
+                        <div class="stat-value">${total}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Mastered</div>
+                        <div class="stat-value">${mastered}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Reviewing</div>
+                        <div class="stat-value">${reviewing}</div>
+                    </div>
+                `;
+
+                document.getElementById('categoryStats').innerHTML = `
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem;">By Category</h3>
+                    ${Object.entries(categories).map(([cat, count]) => `
+                        <div style="margin-bottom: 0.75rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: 6px; display: flex; justify-content: space-between;">
+                            <span>${cat}</span>
+                            <strong>${count}</strong>
+                        </div>
+                    `).join('')}
+                `;
+            };
+        }
+
+        // Practice Mode
+        function setupPracticeMode() {
+            const transaction = db.transaction(['conversations'], 'readonly');
+            const store = transaction.objectStore('conversations');
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const convs = request.result.filter(c => c.status !== 'mastered');
+                if (convs.length === 0) {
+                    document.getElementById('practiceMode').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎉</div><p>All conversations mastered! Add more to continue.</p></div>';
+                    return;
+                }
+
+                const conv = convs[Math.floor(Math.random() * convs.length)];
+
+                document.getElementById('practiceMode').innerHTML = `
+                    <div style="margin-bottom: 1.5rem;">
+                        <div style="background: var(--primary); color: white; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                            <h3 style="margin-bottom: 0.5rem;">Practice Mode</h3>
+                            <p style="font-size: 0.9rem; opacity: 0.9;">Read aloud and practice. Click the speaker button to hear pronunciation.</p>
+                        </div>
+
+                        <div class="form-card">
+                            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                                <span class="badge badge-category">${conv.category}</span>
+                                <span class="badge badge-${conv.difficulty}">${conv.difficulty}</span>
+                            </div>
+
+                            ${conv.exchanges.map((ex, idx) => `
+                                <div class="exchange" style="margin-bottom: 0.75rem;">
+                                    <div class="exchange-speaker">${ex.speaker === 'you' ? 'You' : 'Friend'}</div>
+                                    <div class="exchange-jp">${ex.japanese}</div>
+                                    <div class="exchange-en">${ex.english || '(no translation)'}</div>
+                                    ${ex.japanese ? `<button class="btn btn-secondary" style="margin-top: 0.5rem;" onclick="speakJapanese('${ex.japanese.replace(/'/g, "\\'")}')">🔊 Pronounce</button>` : ''}
+                                </div>
+                            `).join('')}
+
+                            ${conv.notes ? `<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); background: var(--bg-secondary); padding: 0.75rem; border-radius: 6px;"><strong>💡 Notes:</strong> ${conv.notes}</div>` : ''}
+
+                            <div class="form-buttons" style="margin-top: 1.5rem;">
+                                <button class="btn btn-secondary" onclick="setupPracticeMode()">Next</button>
+                                <button class="btn btn-primary" onclick="markAs(${conv.id}, 'mastered')">Mastered</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+        }
+
+        // Text-to-Speech
+        function speakJapanese(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ja-JP';
+            speechSynthesis.speak(utterance);
+        }
+
+        // Reset Form
+        function resetForm() {
+            document.getElementById('japaneseYou').value = '';
+            document.getElementById('englishYou').value = '';
+            document.getElementById('japaneseFriend').value = '';
+            document.getElementById('englishFriend').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('category').value = 'Daily Life';
+            document.getElementById('difficulty').value = 'medium';
+        }
+
+        // Export Data
+        function exportData() {
+            const transaction = db.transaction(['conversations'], 'readonly');
+            const store = transaction.objectStore('conversations');
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const data = JSON.stringify(request.result, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `conversations-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                showToast('Backup downloaded!');
+            };
+        }
+
+        // Import Data
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const transaction = db.transaction(['conversations'], 'readwrite');
+                    const store = transaction.objectStore('conversations');
+
+                    data.forEach(conv => {
+                        delete conv.id;
+                        store.add(conv);
+                    });
+
+                    transaction.oncomplete = () => {
+                        showToast('Conversations restored!');
+                        loadConversations();
+                        updateStats();
+                    };
+                } catch (err) {
+                    showToast('Error importing file');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Toast
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Install Prompt
+        let deferredPrompt;
+        function setupInstallPrompt() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('installPrompt').style.display = 'flex';
+            });
+
+            document.getElementById('installBtn')?.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
