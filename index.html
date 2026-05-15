@@ -8,7 +8,10 @@
     <title>日本語 Conversation Learner</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230F6E56' width='180' height='180'/><text x='50%' y='50%' font-size='100' font-family='Arial' fill='white' text-anchor='middle' dominant-baseline='central'>日</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230F6E56' width='180' height='180'/><text x='50%' y='50%' font-size='100' font-family='Arial' fill='white' text-anchor='middle' dominant-baseline='central'>日</text></svg>">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="日本語 Learner">
     <style>
         * {
             margin: 0;
@@ -490,6 +493,10 @@
         <div id="installPrompt" class="install-prompt" style="display: none;">
             <span>Add to home screen for offline access</span>
             <button id="installBtn">Install</button>
+        </div>
+        <div id="iosInstallBanner" class="install-prompt" style="display: none;">
+            <span>Tap <strong>Share</strong> then <strong>Add to Home Screen</strong> to install</span>
+            <button id="iosInstallClose">✕</button>
         </div>
 
         <div class="tabs">
@@ -1037,6 +1044,15 @@
                     deferredPrompt = null;
                     document.getElementById('installPrompt').style.display = 'none';
                 }
+            });
+
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const isStandalone = window.navigator.standalone === true;
+            if (isIOS && !isStandalone) {
+                document.getElementById('iosInstallBanner').style.display = 'flex';
+            }
+            document.getElementById('iosInstallClose')?.addEventListener('click', () => {
+                document.getElementById('iosInstallBanner').style.display = 'none';
             });
         }
     </script>
