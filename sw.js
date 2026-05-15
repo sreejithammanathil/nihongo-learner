@@ -1,8 +1,10 @@
-const CACHE_NAME = 'japanese-learner-v1';
+const CACHE_NAME = 'japanese-learner-v2';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  '/nihongo-learner/',
+  '/nihongo-learner/index.html',
+  '/nihongo-learner/manifest.json',
+  '/nihongo-learner/sw.js',
+  '/nihongo-learner/icon-180.png'
 ];
 
 // Install event
